@@ -1,21 +1,136 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Water Cycle Match Game</title>
     <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-sky-50">
     <div id="root"></div>
-    <script type="module">
-      import React from 'react';
-      import ReactDOM from 'react-dom/client';
-      import App from './App.jsx';
 
-      ReactDOM.createRoot(document.getElementById('root')).render(
-        React.createElement(React.StrictMode, null, React.createElement(App))
-      );
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const WATER_DATA = [ 
+          { id: 1, term: "Hydrological cycle", def: "How water moves around between the atmosphere, oceans, rivers and the land." }, 
+          { id: 2, term: "Precipitation", def: "Occurs as water droplets get bigger and heavier they begin to fall as rain, snow and sleet, etc." }, 
+          { id: 3, term: "Condensation", def: "Occurs when water vapour cools and turns into water droplets." }, 
+          { id: 4, term: "Evaporation", def: "When the sun heats up water from the oceans, rivers, lakes etc. and it goes into the air as water vapour." }, 
+          { id: 5, term: "Transpiration", def: "When the sun heats up water from the leaves of trees and it goes into the air as water vapour." }, 
+          { id: 6, term: "Surface run-off", def: "When the water runs over the surface of the ground. This water moves quickly to the river." }, 
+          { id: 7, term: "Infiltration", def: "When water soaks into the soil." }, 
+          { id: 8, term: "Through flow", def: "Horizontal movement of water through the soil back to the river." }, 
+          { id: 9, term: "Drainage basin", def: "An area of land drained by a river and its tributaries." } 
+        ]; 
+
+        const shuffleArray = (array) => [...array].sort(() => Math.random() - 0.5); 
+
+        function App() { 
+          const [terms, setTerms] = useState([]); 
+          const [defs, setDefs] = useState([]); 
+          const [selectedTerm, setSelectedTerm] = useState(null); 
+          const [selectedDef, setSelectedDef] = useState(null); 
+          const [matchedIds, setMatchedIds] = useState([]); 
+          const [isEvaluating, setIsEvaluating] = useState(false); 
+          const [errorPair, setErrorPair] = useState(null); 
+          const [moves, setMoves] = useState(0); 
+           
+          const initializeGame = () => { 
+            setTerms(shuffleArray(WATER_DATA.map(d => ({ id: d.id, text: d.term })))); 
+            setDefs(shuffleArray(WATER_DATA.map(d => ({ id: d.id, text: d.def })))); 
+            setSelectedTerm(null); 
+            setSelectedDef(null); 
+            setMatchedIds([]); 
+            setErrorPair(null); 
+            setMoves(0); 
+            setIsEvaluating(false); 
+          }; 
+           
+          useEffect(() => { initializeGame(); }, []); 
+           
+          useEffect(() => { 
+            if (selectedTerm !== null && selectedDef !== null) { 
+              setIsEvaluating(true); 
+              setMoves(m => m + 1); 
+           
+              if (selectedTerm === selectedDef) { 
+                setTimeout(() => { 
+                  setMatchedIds(prev => [...prev, selectedTerm]); 
+                  setSelectedTerm(null); 
+                  setSelectedDef(null); 
+                  setIsEvaluating(false); 
+                }, 500); 
+              } else { 
+                setErrorPair({ term: selectedTerm, def: selectedDef }); 
+                setTimeout(() => { 
+                  setErrorPair(null); 
+                  setSelectedTerm(null); 
+                  setSelectedDef(null); 
+                  setIsEvaluating(false); 
+                }, 1200); 
+              } 
+            } 
+          }, [selectedTerm, selectedDef]); 
+           
+          const isGameComplete = matchedIds.length === WATER_DATA.length && WATER_DATA.length > 0; 
+           
+          return ( 
+            <div class="p-4 md:p-8 font-sans text-slate-800"> 
+              <div class="max-w-5xl mx-auto"> 
+                <header class="mb-8 text-center"> 
+                  <h1 class="text-3xl md:text-4xl font-bold text-blue-900 mb-2">💧 Water Cycle Match</h1> 
+                  <p class="text-slate-600 max-w-xl mx-auto">Select a key term, then find its definition!</p> 
+                  <div class="mt-4 flex items-center justify-center gap-4 text-sm font-medium"> 
+                    <span class="bg-white px-4 py-2 rounded-full shadow border border-slate-200">Matches: {matchedIds.length} / {WATER_DATA.length}</span> 
+                    <span class="bg-white px-4 py-2 rounded-full shadow border border-slate-200">Moves: {moves}</span> 
+                    <button onClick={initializeGame} class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded-full transition-colors cursor-pointer">🔄 Restart</button> 
+                  </div> 
+                </header> 
+           
+                {isGameComplete && ( 
+                  <div class="mb-8 p-6 bg-green-100 border-2 border-green-400 rounded-2xl text-center shadow-lg"> 
+                    <h2 class="text-2xl font-bold text-green-800 mb-2">🏅 Excellent Work!</h2> 
+                    <p class="text-green-700 mb-4">You finished in {moves} moves.</p> 
+                    <button onClick={initializeGame} class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full">Play Again</button> 
+                  </div> 
+                )} 
+           
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8"> 
+                  <div class="flex flex-col gap-3"> 
+                    <h3 class="font-semibold text-slate-500 uppercase text-sm px-2">Key Terms</h3> 
+                    {terms.map((item) => { 
+                      const isMatched = matchedIds.includes(item.id); 
+                      const isSelected = selectedTerm === item.id; 
+                      const isError = errorPair?.term === item.id; 
+                      return ( 
+                        <button key={item.id} onClick={() => {!isEvaluating && !isMatched && setSelectedTerm(item.id === selectedTerm ? null : item.id)}} disabled={isMatched} class={`w-full text-left p-4 rounded-xl border-2 text-lg font-semibold ${isMatched ? 'bg-slate-100 border-slate-200 text-slate-400' : isSelected ? 'bg-blue-500 border-blue-600 text-white' : isError ? 'bg-red-100 border-red-500 text-red-700' : 'bg-white border-blue-200 text-blue-900'}`}>{item.text}</button> 
+                      ); 
+                    })} 
+                  </div> 
+           
+                  <div class="flex flex-col gap-3"> 
+                    <h3 class="font-semibold text-slate-500 uppercase text-sm px-2">Definitions</h3> 
+                    {defs.map((item) => { 
+                      const isMatched = matchedIds.includes(item.id); 
+                      const isSelected = selectedDef === item.id; 
+                      const isError = errorPair?.def === item.id; 
+                      return ( 
+                        <button key={item.id} onClick={() => {!isEvaluating && !isMatched && setSelectedDef(item.id === selectedDef ? null : item.id)}} disabled={isMatched} class={`w-full text-left p-4 rounded-xl border-2 text-sm md:text-base ${isMatched ? 'bg-slate-100 border-slate-200 text-slate-400' : isSelected ? 'bg-teal-500 border-teal-600 text-white' : isError ? 'bg-red-100 border-red-500 text-red-700' : 'bg-white border-teal-200 text-teal-900'}`}>{item.text}</button> 
+                      ); 
+                    })} 
+                  </div> 
+                </div> 
+              </div> 
+            </div> 
+          ); 
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
-  </body>
+</body>
 </html>
